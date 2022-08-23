@@ -39,10 +39,13 @@ Usage:  ruby variantNamingPipeline.rb [options]
     -i, --input inputPath            Path to the input file
     -o, --out outputPath             Designate output path (default at the current locaiton)
     -w, --work workingPath           Designate working directory for the intermediate files (default is set as tmp under outputPath
-    -s, --summary                    Creates the summary report at the end
+    -s, --summary                    Creates the summary report at the end (optional)
     -l, --login filePath             Path to the file which contains user login information (one line in [username]:[pw] format)
     -h, --help                       Display this screen
 ```
+
+If you would like to know how many variants in the VCF that has not been regsitered in the Allele Registry, please query the variants with the `-s` option prior to naming the variants.
+
 ###Querying Variants
 Querying variants will check the variants against CAR and return CAids for the ones that have been named.
 ```
@@ -51,7 +54,7 @@ ruby variantNamingPipeline.rb -r hg38 -i input.vcf -s
 ###Naming Variants
 Naming variants will try to register/name the variants and return the CAids after the process. (-n flag)
 ```
-ruby variantNamingPipeline.rb -r hg38 -i input.vcf -n -s
+ruby variantNamingPipeline.rb -n -r hg38 -i input.vcf
 ```
 ###Optional Parameters
 Compressed gz files can be handled using `--gz` flag to indicate the input file is a gz file
@@ -59,6 +62,10 @@ Compressed gz files can be handled using `--gz` flag to indicate the input file 
 Although the pipeline is not expected to run on a cluster, but you can utilize `-w` flag to point to the local disk for the node and have the output directed to another directory using `-o` flag
 
 The process of query/naming varaints is made to ClinGen Allele Registry with either PUT/POST commands, you can try to optimize the network traffic by either increase/decrease the size of the package sent via network at one time.  Default is set at 10000 lines and this could be changed by using `-b` or `-block` flag to pass in the desired amount.
+
+The intermediate block files will be sorted prior to access the Allele Registry to speed up the whole processes.
+
+Summary report can be generated with `-s` flag.  It can provide some logistic information regarding to the VCF after either querying or naming process has completed. (The additional gathering of the information can compromise the overall speed)
 
 ## Input Files
 

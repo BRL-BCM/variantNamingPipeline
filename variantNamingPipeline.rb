@@ -143,6 +143,7 @@ def outputHeader(vcfVersion,genomeVersion,newHeaderColumns="")
 end
 
 # Parses the e/sQTL input file to create a VCF for Allele Registry
+# Currently, e/sQTL input files are not sorted by the pipeline
 def convertQtlInputToVcf( options,infile,outfileName,notRegisteredFile)
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Create an intermediate VCF: #{outfileName} from the input: #{infile}"
   #output = File.open( outfile,"w" )
@@ -313,7 +314,8 @@ def modVcfInputToAlleleReg( options,infile,outfileName,notRegisteredFile)
         lineCount = lineCount + 1
       else
         lineCount = 0
-        vcfData = vcfHeader + data
+        # sort the data so it can run faster
+        vcfData = vcfHeader + sortVCF(data, tmpFileName)
         callAlleleRegistry( options,vcfData,tmpFileName,"" )
         fileCount = fileCount + 1
         tmpFileName = "#{outfileName}_tmp-#{fileCount}"
@@ -323,7 +325,7 @@ def modVcfInputToAlleleReg( options,infile,outfileName,notRegisteredFile)
     end
   }
   unless data == ""
-    vcfData = vcfHeader + data
+    vcfData = vcfHeader + sortVCF(data, tmpFileName)
     callAlleleRegistry( options,vcfData,tmpFileName,"" )
   end
   notRegFile.close
@@ -341,12 +343,24 @@ def checkColumnNames(header,requiredCols)
   }
 end
 
+def sortVCF(data, outfileName)
+  puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Sorting the data in #{outfileName}"
+  infile = "#{outfileName}_input.txt"
+  outfile = "#{outfileName}_input_sorted.txt"
+  File.open(infile,"w") { |file| file.puts data}
+  `(grep ^"#" #{infile}; grep -v ^"#" #{infile} | sort -k1,1 -k2,2n) > #{outfile}`
+  File.delete(infile)
+  result = File.read(outfile)
+  File.delete(outfile)
+  return result
+end
+
 # Makes the request with ClinGen Allele Registry
 def callAlleleRegistry(options,data,outfileName,origData)
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Calling ClinGen Allele Registry for data in #{outfileName}"
   # URL to connect to allele registry
-  #url = "http://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords"
   url = "http://reg.genome.network/alleles?file=vcf&fields=none+@id"
+  url = "http://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords" if options[:summary]
 
   if options[:naming]
     response = putData( url,data,userLogingAndPw(options[:loginFile],:user),userLogingAndPw(options[:loginFile],:pw))
@@ -365,7 +379,8 @@ def callAlleleRegistry(options,data,outfileName,origData)
     File.open(outfile,"w") { |file| file.write data}
   else
     if options[:summary]
-      sumFile = "#{outfileName}_summary.txt"
+      sumFile = "#{outfileName}_query_summary.txt"
+      sumFile = "#{outfileName}_naming_summary.txt" if options[:naming]
       createSummaryReport( respJson,sumFile )
     end
 
@@ -376,12 +391,11 @@ def callAlleleRegistry(options,data,outfileName,origData)
       pipeOutputFile = "#{outfileName}_CAid#{options[:infileExtension]}"
       notRegFile = "#{outfileName}_noCAid#{options[:infileExtension]}"
     end
-    if options[:gtex]
+    if options[:gtex_egenes] || options[:gtex_pairs]
       outputCAid( options, origData ,respJson,pipeOutputFile,notRegFile )
     else
       outputCAid( options, data ,respJson,pipeOutputFile,notRegFile )
     end
-
   end
 end
 
@@ -584,7 +598,7 @@ optparse = OptionParser. new { |opts|
   opts.on('-i', '--input inputPath', "Path to the input file") {|input| options[:input]=input}
   opts.on('-o', '--out outputPath', "Designate output path (default at the current locaiton)") {|out| options[:out]=out}
   opts.on('-w', '--work workingPath', "Designate working directory for the intermediate files (default is set as tmp under outputPath") {|work| options[:work]=work}
-  opts.on('-s', '--summary', "Creates the summary report at the end") {options[:summary]=TRUE}
+  opts.on('-s', '--summary', "Creates the summary report at the end (optional)") {options[:summary]=TRUE}
   opts.on('-l', '--login filePath', "Path to the file which contains user login information (one line in [username]:[pw] format)") { |filePath| options[:loginFile] = filePath}
   opts.on('-h', '--help', "Display this screen"){ puts optparse; exit }
 }
@@ -657,6 +671,6 @@ mergeIntermediateVcfFiles(options,tmpDir,fname)
 
 
 #remove the intermediate files
-cleanTmpDirFiles(tmpDirFname)
+#cleanTmpDirFiles(tmpDirFname)
 
 puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] finish"
