@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 #
 # Facilitate variant querying/registering process with ClinGen Allele Registry
 #
@@ -250,7 +249,7 @@ end
 # Parses the input VCF file and creates a new VCF for Allele Registry
 def modVcfInputToAlleleReg( options,infile,outfileName,notRegisteredFile)
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Create an intermediate VCF: #{outfileName} from the input: #{infile}"
-  createHeader = FALSE
+  createHeader = false
   metadata = {}
   vcfVersion = ""
   headerCols = ""
@@ -290,7 +289,7 @@ def modVcfInputToAlleleReg( options,infile,outfileName,notRegisteredFile)
       requiredCols = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO".split(/\t/)
       checkColumnNames(headerCols,requiredCols)
       vcfHeader = outputHeader(vcfVersion,options[:ref],headerCols.join("\t")) + "\n"
-      createHeader = TRUE
+      createHeader = true
       next
     elsif tmp.match(/^##/)
       origHeader = origHeader + line
@@ -531,10 +530,10 @@ def mergeIntermediateSummary(options, tmpDir, outFileName, noCAidsCount)
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Merging summary intermediate files in: #{tmpDir}"
   totalCountHash = {}
   Dir["#{tmpDir}/*tmp*summary*"].each { |summary|
-    extRecordCheck = FALSE
+    extRecordCheck = false
     File.open(summary,"r").each_line { |line|
       if line.match(/records:/)
-        extRecordCheck = TRUE
+        extRecordCheck = true
         next
       end
       if extRecordCheck
@@ -589,16 +588,16 @@ optparse = OptionParser. new { |opts|
   opts.banner = "Note: An user account is required for variant naming.  Please go to http://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/landing to create an account.\n\n" +
     "Usage:  ruby #{File.basename(__FILE__)} [options]\n" +
     "\tDefault is set on querying the variants instead of naming the variants.\n\tInput is set on VCF format unless GTEx option is specified."
-  opts.on('-n', '--name', "Naming/registering the variants in Allele Registry") { options[:naming] = TRUE}
-  opts.on('--gtex_egenes', "Using GTEx s/eQTL egenes files as input (input will be assumed to be a VCF if this is not set)") { options[:gtex_egenes]=TRUE}
-  opts.on('--gtex_pairs', "Using GTEx s/eQTL gene/signif pair files as input (input will be assumed to be a VCF if this is not set)") { options[:gtex_pairs]=TRUE}
-  opts.on('--gz', "Use this flag to indicate the input is gzipped") { options[:gz] = TRUE}
+  opts.on('-n', '--name', "Naming/registering the variants in Allele Registry") { options[:naming] = true}
+  opts.on('--gtex_egenes', "Using GTEx s/eQTL egenes files as input (input will be assumed to be a VCF if this is not set)") { options[:gtex_egenes]=true}
+  opts.on('--gtex_pairs', "Using GTEx s/eQTL gene/signif pair files as input (input will be assumed to be a VCF if this is not set)") { options[:gtex_pairs]=true}
+  opts.on('--gz', "Use this flag to indicate the input is gzipped") { options[:gz] = true}
   opts.on('-r', '--ref reference', "reference genome for the input file [hg19|grch37 or hg38|grch38] (default at hg38)") { |ref| options[:ref] = ref}
   opts.on('-b', '--block blockNumber', "Querying/Naming in blocks in large inputs, Default is at 10000") { |block| options[:block] = block.to_i}
   opts.on('-i', '--input inputPath', "Path to the input file") {|input| options[:input]=input}
   opts.on('-o', '--out outputPath', "Designate output path (default at the current locaiton)") {|out| options[:out]=out}
   opts.on('-w', '--work workingPath', "Designate working directory for the intermediate files (default is set as tmp under outputPath") {|work| options[:work]=work}
-  opts.on('-s', '--summary', "Creates the summary report at the end (optional)") {options[:summary]=TRUE}
+  opts.on('-s', '--summary', "Creates the summary report at the end (optional)") {options[:summary]=true}
   opts.on('-l', '--login filePath', "Path to the file which contains user login information (one line in [username]:[pw] format)") { |filePath| options[:loginFile] = filePath}
   opts.on('-h', '--help', "Display this screen"){ puts optparse; exit }
 }
