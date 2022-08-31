@@ -25,7 +25,7 @@ require 'zlib'
 
 # THE LOGIN FILE PATH NEEDS TO BE MODIFIED TO FIT YOUR DIRECTORY PATH
 # IT IS EXPECTING A LINE IN THE FILE WITH FORMAT AS  [USER LOGIN]:[PASSWORD]
-loginFile="/home/dc12/.AlleleRegistry"
+loginFile=".AlleleRegistry"
 
 # return response
 # throw exceptions in case of errors
@@ -347,7 +347,8 @@ def sortVCF(data, outfileName)
   infile = "#{outfileName}_input.txt"
   outfile = "#{outfileName}_input_sorted.txt"
   File.open(infile,"w") { |file| file.puts data}
-  `(grep ^"#" #{infile}; grep -v ^"#" #{infile} | sort -k1,1 -k2,2n) > #{outfile}`
+  #`(grep ^"#" #{infile}; grep -v ^"#" #{infile} | sort -k1,1 -k2,2n) > #{outfile}`
+  system("(grep ^'#' '#{infile}'; grep -v ^'#' '#{infile}' | sort -k1,1 -k2,2n) > '#{outfile}'")
   File.delete(infile)
   result = File.read(outfile)
   File.delete(outfile)
@@ -477,7 +478,7 @@ def mergeIntermediateWithInput(options, tmpDir, ourFileName)
   end
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Merging *_CAid* intermediate files in: #{tmpDir}"
   caIDs = Dir["#{tmpDir}/*tmp*_CAid*"]
-
+  
 end
 
 def mergeIntermediateVcfFiles(options,tmpDir,outFileName)
@@ -491,12 +492,16 @@ def mergeIntermediateVcfFiles(options,tmpDir,outFileName)
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Merging *_CAid* intermediate files in: #{tmpDir}"
   caIDs = Dir["#{tmpDir}/*tmp*_CAid*"]
   #puts "cat #{caIDs.join(" ")} > #{options[:out]}/#{caIdOutName}\n"
-  `cat #{caIDs.join(" ")} > #{options[:out]}/#{caIdOutName}`
+  #`cat #{caIDs.join(" ")} > #{options[:out]}/#{caIdOutName}`
+  #puts("cat \'#{caIDs.join("\' \'")}\' > \'#{options[:out]}/#{caIdOutName}\'")
+  system("cat \'#{caIDs.join("\' \'")}\' > \'#{options[:out]}/#{caIdOutName}\'")
 
   puts "[#{Time.now.strftime("%Y-%m-%dT%H:%M:%S")}] Merging *_noCAid* intermediate files in: #{tmpDir}"
   noCAids = Dir["#{tmpDir}/*tmp*_noCAid*"]
   #puts "cat #{options[:notRegisteredFile]} #{noCAids.join(" ")} > #{options[:out]}/#{noCAidOutName}"
-  `cat #{options[:notRegisteredFile]} #{noCAids.join(" ")} > #{options[:out]}/#{noCAidOutName}`
+  #`cat #{options[:notRegisteredFile]} #{noCAids.join(" ")} > #{options[:out]}/#{noCAidOutName}`
+  #puts("cat \'#{options[:notRegisteredFile]}\' \'#{noCAids.join("\' \'")}\'  > \'#{options[:out]}/#{noCAidOutName}\'")
+  system("cat \'#{options[:notRegisteredFile]}\' \'#{noCAids.join("\' \'")}\'  > \'#{options[:out]}/#{noCAidOutName}\'")
 
   if options[:summary]
     summaries = "#{tmpDir}/*tmp*summary*"
